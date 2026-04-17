@@ -6,11 +6,11 @@ import pandas as pd
 
 import psycopg2
 # Fetch variables
-USER = "xxxxxx" #os.getenv("user")
-PASSWORD = "xxxxxx"# os.getenv("password")
-HOST = "xxxxxx" #os.getenv("host")
-PORT = "xxxxxxx" #os.getenv("port")
-DBNAME = "xxxxxxx" #os.getenv("dbname")
+USER = "postgres.nrtgdkhlyueerektkofu" #os.getenv("user")
+PASSWORD = "!Duquecito2021"# os.getenv("password")
+HOST = "aws-1-us-east-1.pooler.supabase.com" #os.getenv("host")
+PORT = "6543" #os.getenv("port")
+DBNAME = "postgres" #os.getenv("dbname")
 
 # Configuración de la página
 st.set_page_config(page_title="Predictor de Iris", page_icon="🌸")
