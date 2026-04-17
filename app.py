@@ -110,7 +110,7 @@ if model is not None:
 
             insert_query = """
             INSERT INTO ml.tb_iris 
-            ("I_s", a_s, "I_p", a_p, prediccion, confidence)
+            ("l_s", a_s, "l_p", a_p, prediccion, confidence)
             VALUES (%s, %s, %s, %s, %s, %s);
             """
 
