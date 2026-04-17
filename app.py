@@ -2,14 +2,15 @@ import streamlit as st
 import joblib
 import pickle
 import numpy as np
+import pandas as pd
 
 import psycopg2
 # Fetch variables
-USER = "postgres.nrtgdkhlyueerektkofu" #os.getenv("user")
-PASSWORD = "!Duquecito2021"# os.getenv("password")
-HOST = "aws-1-us-east-1.pooler.supabase.com" #os.getenv("host")
-PORT = "6543" #os.getenv("port")
-DBNAME = "postgres" #os.getenv("dbname")
+USER = "xxxxxx" #os.getenv("user")
+PASSWORD = "xxxxxx"# os.getenv("password")
+HOST = "xxxxxx" #os.getenv("host")
+PORT = "xxxxxxx" #os.getenv("port")
+DBNAME = "xxxxxxx" #os.getenv("dbname")
 
 # Configuración de la página
 st.set_page_config(page_title="Predictor de Iris", page_icon="🌸")
@@ -85,11 +86,91 @@ if model is not None:
         # Mostrar resultado
         target_names = model_info['target_names']
         predicted_species = target_names[prediction]
+        confidence = float(max(probabilities))
         
-        st.success(f"Especie predicha: **{predicted_species}**")
-        st.write(f"Confianza: **{max(probabilities):.1%}**")
+        st.success(f"Especie predicha: *{predicted_species}*")
+        st.write(f"Confianza: *{max(probabilities):.1%}*")
         
         # Mostrar todas las probabilidades
         st.write("Probabilidades:")
         for species, prob in zip(target_names, probabilities):
             st.write(f"- {species}: {prob:.1%}")
+
+        # 💾 GUARDAR EN BD
+        try:
+            conn = psycopg2.connect(
+                user=USER,
+                password=PASSWORD,
+                host=HOST,
+                port=PORT,
+                dbname=DBNAME
+            )
+
+            cursor = conn.cursor()
+
+            insert_query = """
+            INSERT INTO ml.tb_iris 
+            ("I_s", a_s, "I_p", a_p, prediccion, confidence)
+            VALUES (%s, %s, %s, %s, %s, %s);
+            """
+
+            cursor.execute(insert_query, (
+                sepal_length,
+                sepal_width,
+                petal_length,
+                petal_width,
+                predicted_species,
+                confidence
+            ))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            st.success("✅ Guardado en la base de datos")
+
+        except Exception as e:
+            st.error(f"Error al guardar: {e}")
+
+# HISTÓRICO
+st.header("📊 Histórico de Predicciones")
+
+try:
+    conn = psycopg2.connect(
+        user=USER,
+        password=PASSWORD,
+        host=HOST,
+        port=PORT,
+        dbname=DBNAME
+    )
+    
+    cursor = conn.cursor()
+
+    query = """
+    SELECT "I_s", a_s, "I_p", a_p, prediccion, confidence, created_at
+    FROM ml.tb_iris
+    ORDER BY created_at DESC;
+    """
+
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    if rows:
+        df = pd.DataFrame(rows, columns=[
+            "Sepal Length",
+            "Sepal Width",
+            "Petal Length",
+            "Petal Width",
+            "Predicción",
+            "Confianza",
+            "Fecha"
+        ])
+        st.dataframe(df)
+    else:
+        st.info("No hay registros aún.")
+
+except Exception as e:
+    st.error(f"Error al cargar histórico: {e}")
